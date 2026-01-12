@@ -1,6 +1,7 @@
 package com.warehouse.auth.entity;
 
 import jakarta.persistence.*;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @Entity
 @Table(name = "users")
@@ -26,7 +27,8 @@ public class User {
   private String password;
 
   @Column(nullable = false)
-  private String role;
+  @Enumerated(EnumType.STRING)
+  private UserRole role;
 
   @Column(nullable = false)
   private Boolean active = true;
@@ -82,11 +84,11 @@ public class User {
     this.password = password;
   }
 
-  public String getRole() {
+  public UserRole getRole() {
     return role;
   }
 
-  public void setRole(String role) {
+  public void setRole(UserRole role) {
     this.role = role;
   }
 
@@ -115,5 +117,19 @@ public class User {
         ", active=" + active +
         ", role='" + role + '\'' +
         '}';
+  }
+
+  @Transient
+  private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+  public void newUser(String name, String surname, String username, String email, String password, UserRole role) {
+    setName(name);
+    setSurname(surname);
+    setUsername(username);
+    setEmail(email);
+    setRole(role);
+    setPassword(passwordEncoder.encode(password));
+    setActive(true);
+    setCreatedAt(System.currentTimeMillis());
   }
 }

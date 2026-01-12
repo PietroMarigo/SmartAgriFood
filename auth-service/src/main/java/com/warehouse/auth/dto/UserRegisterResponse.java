@@ -1,13 +1,14 @@
 package com.warehouse.auth.dto;
 
+import com.warehouse.auth.entity.*;
+
 public class UserRegisterResponse {
   private Integer userId;
   private String name;
   private String surname;
   private String username;
   private String email;
-  private String role;
-  private String message;
+  private UserRole role;
 
   public Integer getUserId() {
     return userId;
@@ -49,19 +50,22 @@ public class UserRegisterResponse {
     this.email = email;
   }
 
-  public String getRole() {
+  public UserRole getRole() {
     return role;
   }
 
-  public void setRole(String role) {
+  public void setRole(UserRole role) {
     this.role = role;
   }
 
-  public String getMessage() {
-    return message;
-  }
-
-  public void setMessage(String message) {
-    this.message = message;
+  public UserRegisterResponse registerResponse(User user) {
+    UserRegisterResponse ur = new UserRegisterResponse();
+    ur.setUserId(user.getId());
+    ur.setName(user.getName());
+    ur.setSurname(user.getSurname());
+    ur.setUsername(user.getUsername());
+    ur.setEmail(user.getEmail());
+    ur.setRole(user.getRole());
+    return ur;
   }
 }

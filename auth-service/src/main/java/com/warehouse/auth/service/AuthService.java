@@ -1,9 +1,9 @@
 package com.warehouse.auth.service;
 
-import com.warehouse.auth.dto.LoginResponse;
-import com.warehouse.auth.dto.LoginRequest;
+import com.warehouse.auth.dto.*;
 import com.warehouse.auth.entity.User;
 import com.warehouse.auth.exception.InvalidCredentialsException;
+import com.warehouse.auth.exception.UserAlreadyExistsException;
 import com.warehouse.auth.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.context.annotation.Bean;
@@ -22,12 +22,6 @@ public class AuthService {
     this.userRepository = userRepository;
     this.passwordEncoder = passwordEncoder;
   }
-
-  // @Autowired
-  // private UserRepository userRepository;
-  //
-  // @Autowired
-  // private PasswordEncoder passwordEncoder;
 
   private boolean isBlank(String value) {
     return value == null || value.isEmpty();
@@ -76,5 +70,51 @@ public class AuthService {
         user.getUsername(),
         user.getEmail(),
         user.getRole());
+  }
+
+  public UserRegisterResponse register(UserRegisterRequest registRequest) {
+    boolean nameProvided = !isBlank(registRequest.getName());
+    boolean surnameProvided = !isBlank(registRequest.getSurname());
+    boolean emailProvided = !isBlank(registRequest.getEmail());
+    boolean passProvided = !isBlank(registRequest.getPassword());
+    // boolean roleProvided = !isBlank(registRequest.getRole());
+
+    if (!nameProvided || !surnameProvided || !emailProvided) {
+      throw new InvalidCredentialsException("Non sono stati fornite tutte le generalità");
+    }
+
+    if (!passProvided) {
+      throw new InvalidCredentialsException("Non è stata fornita una password");
+    }
+
+    if (registRequest.getRole() == null) {
+      throw new InvalidCredentialsException("Non è stato fornito un ruolo");
+    }
+
+    var checkEmail = userRepository.findByEmail(registRequest.getEmail()).orElse(null);
+    if (checkEmail != null)
+      throw new UserAlreadyExistsException("L'email è già in uso, con ogni probabilità l'utente esiste già");
+
+    int idUserName = (int) userRepository.count() + 1;
+    String initials = (registRequest.getName().substring(0, 1) + registRequest.getSurname().substring(0, 1))
+        .toUpperCase();
+    String userName = String.format("%s%03d", initials, idUserName);
+
+    User newUser = new User();
+    newUser.newUser(
+        registRequest.getName(),
+        registRequest.getSurname(),
+        userName,
+        registRequest.getEmail(),
+        registRequest.getPassword(),
+        registRequest.getRole());
+    User savedUser = userRepository.save(newUser);
+    System.out.println(savedUser.toString());
+    return new UserRegisterResponse().registerResponse(savedUser);
+    // savedUser.getId(),
+    // savedUser.getName(),
+    // savedUser.getSurname(),
+    // savedUser.getEmail(),
+    // savedUser.getRole());
   }
 }

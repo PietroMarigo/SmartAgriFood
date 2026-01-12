@@ -1,14 +1,16 @@
 package com.warehouse.auth.dto;
 
+import com.warehouse.auth.entity.UserRole;
+
 public class LoginResponse {
   private Integer userId;
   private String name;
   private String surname;
   private String username;
   private String email;
-  private String role;
+  private UserRole role;
 
-  public LoginResponse(Integer userId, String name, String surname, String username, String email, String role) {
+  public LoginResponse(Integer userId, String name, String surname, String username, String email, UserRole role) {
     this.userId = userId;
     this.name = name;
     this.surname = surname;
@@ -57,11 +59,11 @@ public class LoginResponse {
     this.email = email;
   }
 
-  public String getRole() {
+  public UserRole getRole() {
     return role;
   }
 
-  public void setRole(String role) {
+  public void setRole(UserRole role) {
     this.role = role;
   }
 }
