@@ -4,6 +4,7 @@ import com.warehouse.auth.AuthServiceApplication;
 import com.warehouse.auth.config.SecurityConfig;
 import com.warehouse.auth.dto.*;
 import com.warehouse.auth.exception.*;
+import com.warehouse.auth.repository.UserRepository;
 import com.warehouse.auth.service.AuthService;
 import com.warehouse.auth.entity.*;
 
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.Order;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+// import org.springframework.security.core.userdetails.User;
 // import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.UserRequestPostProcessor;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
@@ -28,6 +30,7 @@ public class RegisterTest {
 
   @Autowired
   AuthService authService;
+  UserRepository userRepository;
 
   private UserRegisterRequest userRegisterRequest = new UserRegisterRequest();
 
