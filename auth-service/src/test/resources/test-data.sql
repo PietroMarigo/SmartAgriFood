@@ -1,14 +1,21 @@
-DROP TABLE IF EXISTS products;
-
-CREATE TABLE products (
+CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    sku VARCHAR(10) UNIQUE NOT NULL,
-    name VARCHAR(100) NOT NULL,
-    shelf_life_days INTEGER NOT NULL,
-    category VARCHAR(50) 
+    name TEXT NOT NULL,
+    surname TEXT NOT NULL,
+    username TEXT UNIQUE NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    role TEXT NOT NULL CHECK(role IN('MAGAZZINIERE', 'UFFICIO')),
+    active BOOLEAN DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO products (sku, name, shelf_life_days, category) VALUES 
-('A001', 'Mele Golden', 30, 'FRUTTA'),
-('A002', 'Banane', 7, 'FRUTTA'),
-('A003', 'Pomodori', 10, 'VERDURA');
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username ON users(username);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email);
+
+INSERT OR IGNORE INTO users (name, surname, username, email, password, role, active) VALUES
+    ('Mario', 'Rossi', 'MR001', 'mario.rossi@warehouse.it', '$2a$12$dETf5n0IMM/wcfD81BaqmOlxiT5ZeZrynAq0NNkUu8iwbgFxc2zDG', 'MAGAZZINIERE', 1),
+    ('Francesco', 'Bianchi', 'FB002', 'francesco.bianchi@warehouse.it', '$2a$12$dETf5n0IMM/wcfD81BaqmOlxiT5ZeZrynAq0NNkUu8iwbgFxc2zDG', 'UFFICIO', 1),
+    ('Giovanni', 'Verdi', 'GV003', 'giovanni.verdi@warehouse.it', '$2a$12$dETf5n0IMM/wcfD81BaqmOlxiT5ZeZrynAq0NNkUu8iwbgFxc2zDG', 'MAGAZZINIERE', 1),
+    ('Laura', 'Neri', 'LN004', 'laura.neri@warehouse.it', '$2a$12$dETf5n0IMM/wcfD81BaqmOlxiT5ZeZrynAq0NNkUu8iwbgFxc2zDG', 'UFFICIO', 1);
+

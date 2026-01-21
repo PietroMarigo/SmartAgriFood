@@ -39,7 +39,7 @@ public class RegisterTest {
   public void testAlreadyUsedEmail() {
     System.out.println("Test email già usata");
     UserRegisterRequest registerRequest = userRegisterRequest.newUserRegisterRequest("pippo", "baudo",
-        "mario@example.com", "pippo123", UserRole.MAGAZZINIERE);
+        "mario.rossi@warehouse.it", "pippo123", UserRole.MAGAZZINIERE);
     System.out.println(registerRequest.toString());
 
     assertThrows(UserAlreadyExistsException.class, () -> {
