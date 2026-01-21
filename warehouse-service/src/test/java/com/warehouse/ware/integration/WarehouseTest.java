@@ -2,6 +2,7 @@ package com.warehouse.ware.integration;
 
 import com.warehouse.ware.WarehouseServiceApplication;
 import com.warehouse.ware.entity.Batch;
+import com.warehouse.ware.entity.Movment;
 // import com.warehouse.ware.entity.Products;
 import com.warehouse.ware.exception.ProductNotFoundException;
 import com.warehouse.ware.service.WarehouseService;
@@ -60,12 +61,22 @@ public class WarehouseTest {
   @Test
   @Order(2)
   public void testWarehouseNoSql() {
-    String sku = "A001";
+    String batchId = "A001-003-20250105-001";
     Double weight = 150.5;
     String location = "Z-A-001";
-    Batch savedBatch = warehouseService.receiveGoods(sku, weight, location);
-    assertNotNull(savedBatch.getId());
+    Batch savedBatch = warehouseService.receiveGoods(batchId, weight, location);
+    assertNotNull(savedBatch.getBatchId());
     LocalDate expectedDate = LocalDate.now().plusDays(30);
     assertEquals(expectedDate, savedBatch.getExpiryDate());
+  }
+
+  @Test
+  @Order(3)
+  public void testMovement() {
+    String batchId = "A001-003-20250105-001";
+    String newZone = "Z-B-002";
+    String workerUsername = "MR001";
+    Movment savedMovement = warehouseService.moveBatch(batchId, newZone, workerUsername);
+    assertNotNull(savedMovement.getBatchId());
   }
 }
