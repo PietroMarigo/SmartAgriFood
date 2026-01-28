@@ -10,6 +10,41 @@ services:
             MONGODB_INITDB_ROOT_USERNAME: mongodb
             MONGODB_INITDB_ROOT_PASSWORD: pippo123
 
+
+    auth-service:
+        build: 
+            context: ../auth-service/
+            dockerfile: Dockerfile
+        ports:
+            - "8081:8081"
+        volumes:
+            - ../auth-service/auth.db:/app/auth.db
+        environment:
+            - SPRING_DATASOURCE_URL=jdbc:sqlite:/app/auth.db
+        depends_on:
+            - mongodb
+
+
+    warehouse-service:
+        build: ../warehouse-service/
+        ports:
+            - "8082:8082"
+        volumes:
+            - ../warehouse-service/products.db:/app/products.db
+        environment:
+            - SPRING_DATASOURCE_URL=jdbc:sqlite:/app/products.db
+            - SPRING_DATA_MONGODB_URI=mongodb://mongodb:pippo123@mongodb:27017/wms_db?authSource=admin
+        depends_on:
+            - mongodb
+
+    api-gateway:
+        build: ../api-gateway/
+        ports:
+            - "8080:8080"
+        depends_on:
+            - auth-service
+            - warehouse-service
+
 volumes:
     mongodb:
         external: true
