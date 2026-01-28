@@ -1,8 +1,21 @@
-DELETE FROM users;
-INSERT INTO users (name, surname, username, email, password, role, active, created_at) 
-VALUES 
-('Mario', 'Rossi', 'MR001', 'mario@example.com', '$2a$12$HMjMyK65W59e6h5lmW6YC.TEzMsTCsmau9ip65NVYG1kSNFDKOdm.', 'MAGAZZINIERE', 1, 1704700800000),
-('Francesco', 'Bianchi', 'FB002', 'francesco@example.com', '$2a$12$HMjMyK65W59e6h5lmW6YC.TEzMsTCsmau9ip65NVYG1kSNFDKOdm.', 'UFFICIO', 1, 1704700800000),
-('Giovanni', 'Verdi', 'GV003', 'giovanni@example.com', '$2a$12$HMjMyK65W59e6h5lmW6YC.TEzMsTCsmau9ip65NVYG1kSNFDKOdm.', 'MAGAZZINIERE', 1, 1704700800000),
-('Laura', 'Neri', 'LN004', 'laura@example.com', '$2a$12$HMjMyK65W59e6h5lmW6YC.TEzMsTCsmau9ip65NVYG1kSNFDKOdm.', 'UFFICIO', 1, 1704700800000),
-('Pietro', 'Smusi', 'PS005', 'pietro.smusi@warehouse.it', '$2a$12$HMjMyK65W59e6h5lmW6YC.TEzMsTCsmau9ip65NVYG1kSNFDKOdm.', 'MAGAZZINIERE', 0, 1704700800000);
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    surname TEXT NOT NULL,
+    username TEXT UNIQUE NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    role TEXT NOT NULL CHECK(role IN('MAGAZZINIERE', 'UFFICIO')),
+    active BOOLEAN DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username ON users(username);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email);
+
+INSERT OR IGNORE INTO users (name, surname, username, email, password, role, active) VALUES
+    ('Mario', 'Rossi', 'MR001', 'mario.rossi@warehouse.it', '$2a$12$dETf5n0IMM/wcfD81BaqmOlxiT5ZeZrynAq0NNkUu8iwbgFxc2zDG', 'MAGAZZINIERE', 1),
+    ('Francesco', 'Bianchi', 'FB002', 'francesco.bianchi@warehouse.it', '$2a$12$dETf5n0IMM/wcfD81BaqmOlxiT5ZeZrynAq0NNkUu8iwbgFxc2zDG', 'UFFICIO', 1),
+    ('Giovanni', 'Verdi', 'GV003', 'giovanni.verdi@warehouse.it', '$2a$12$dETf5n0IMM/wcfD81BaqmOlxiT5ZeZrynAq0NNkUu8iwbgFxc2zDG', 'MAGAZZINIERE', 1),
+    ('Laura', 'Neri', 'LN004', 'laura.neri@warehouse.it', '$2a$12$dETf5n0IMM/wcfD81BaqmOlxiT5ZeZrynAq0NNkUu8iwbgFxc2zDG', 'UFFICIO', 1);
+

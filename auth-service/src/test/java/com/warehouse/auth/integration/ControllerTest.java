@@ -159,7 +159,7 @@ public class ControllerTest {
     UserRegisterRequest registerRequest = new UserRegisterRequest();
     registerRequest.setName("Ciro");
     registerRequest.setSurname("Pasquale");
-    registerRequest.setEmail("mario@example.com");
+    registerRequest.setEmail("mario.rossi@warehouse.it");
     registerRequest.setPassword("pippo123");
     registerRequest.setRole(UserRole.MAGAZZINIERE);
 
