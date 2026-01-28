@@ -7,6 +7,7 @@ import com.warehouse.ware.repository.BatchRepository;
 import com.warehouse.ware.repository.MovementRepository;
 import com.warehouse.ware.repository.ProductRepository;
 import com.warehouse.ware.exception.*;
+import com.warehouse.ware.dto.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -41,23 +42,27 @@ public class WarehouseService {
     return productRepository.findBySku(Batch.extractSku(batchId)).orElse(null);
   }
 
-  public Batch receiveGoods(String batchId, Double weight, String locationCode) {
-    String sku = Batch.extractSku(batchId);
+  public BatchReceiptResponse receiveGoods(BatchReceiptRequest batchRequest) {
+    String sku = Batch.extractSku(batchRequest.getBatchId());
+    System.out.println("Sku" + sku);
     Products product = productRepository.findBySku(sku)
         .orElseThrow(() -> new ProductNotFoundException("Il condice SKU non ha restituito nessun prodotto" + sku));
     LocalDate expirationDate = LocalDate.now().plusDays(product.getShelfLifeDays());
 
-    Batch newBatch = new Batch(batchId, weight, locationCode, expirationDate, "Disponibile", LocalDateTime.now());
-    return batchRepository.save(newBatch);
+    Batch newBatch = new Batch(batchRequest.getBatchId(), batchRequest.getWeight(), batchRequest.getLocationCode(),
+        expirationDate, "Disponibile", LocalDateTime.now());
+    Batch savedBatch = batchRepository.save(newBatch);
+    return new BatchReceiptResponse().receiptResponse(savedBatch);
   }
 
-  public Movment moveBatch(String batchId, String newZone, String workerUsername) {
+  public MoveResponse moveBatch(String batchId, String newZone, String workerUsername) {
     Batch batch = batchRepository.findByBatchId(batchId).orElse(null);
     if (batch == null)
-      new RuntimeException("Batch not found");
+      throw new RuntimeException("Batch not found");
     Movment move = new Movment(batchId, batch.getLocationCode(), newZone, workerUsername, LocalDateTime.now());
     batch.setLocationCode(newZone);
     batchRepository.save(batch);
-    return movementRepository.save(move);
+    movementRepository.save(move);
+    return new MoveResponse(move);
   }
 }

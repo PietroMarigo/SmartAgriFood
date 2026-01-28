@@ -106,6 +106,10 @@ public class Batch {
       LocalDateTime timeStamp) {
     this.setBatchId(batchId);
     String[] info = extractInfo(batchId);
+    if (info.length < 4) {
+      throw new IllegalArgumentException(
+          "Il Batch ID deve seguire il formato: SKU-Fornitore-Data-Incremento (es. A001-003-20250105-001)");
+    }
     this.setProductSku(info[0]);
     this.setWeightKg(weight);
     this.setLocationCode(locationCode);

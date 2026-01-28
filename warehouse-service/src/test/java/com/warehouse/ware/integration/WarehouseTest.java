@@ -6,6 +6,7 @@ import com.warehouse.ware.entity.Movment;
 // import com.warehouse.ware.entity.Products;
 import com.warehouse.ware.exception.ProductNotFoundException;
 import com.warehouse.ware.service.WarehouseService;
+import com.warehouse.ware.dto.*;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -61,10 +62,11 @@ public class WarehouseTest {
   @Test
   @Order(2)
   public void testWarehouseNoSql() {
-    String batchId = "A001-003-20250105-001";
-    Double weight = 150.5;
-    String location = "Z-A-001";
-    Batch savedBatch = warehouseService.receiveGoods(batchId, weight, location);
+    BatchReceiptRequest batchRequest = new BatchReceiptRequest();
+    batchRequest.setBatchId("A001-003-20250105-001");
+    batchRequest.setWeight(150.5);
+    batchRequest.setLocationCode("A-001");
+    BatchReceiptResponse savedBatch = warehouseService.receiveGoods(batchRequest);
     assertNotNull(savedBatch.getBatchId());
     LocalDate expectedDate = LocalDate.now().plusDays(30);
     assertEquals(expectedDate, savedBatch.getExpiryDate());
@@ -76,7 +78,7 @@ public class WarehouseTest {
     String batchId = "A001-003-20250105-001";
     String newZone = "Z-B-002";
     String workerUsername = "MR001";
-    Movment savedMovement = warehouseService.moveBatch(batchId, newZone, workerUsername);
+    MoveResponse savedMovement = warehouseService.moveBatch(batchId, newZone, workerUsername);
     assertNotNull(savedMovement.getBatchId());
   }
 }
