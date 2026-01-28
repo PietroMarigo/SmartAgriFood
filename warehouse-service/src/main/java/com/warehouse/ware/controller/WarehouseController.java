@@ -40,8 +40,8 @@ public class WarehouseController {
   @PostMapping("/move")
   public ResponseEntity<?> move(@RequestBody MoveRequest moveRequest) {
     try {
-      MoveResponse moveResponse = warehouseService.moveBatch(moveRequest.getBatchId(), moveRequest.getNewLocation(),
-          moveRequest.getWorkerId());
+      MoveResponse moveResponse = warehouseService.moveBatch(moveRequest.getBatchId(), moveRequest.getNewZone(),
+          moveRequest.getWorkerUsername());
       return ResponseEntity.ok(moveResponse);
     } catch (RuntimeException e) {
       Map<String, String> errorDetails = new HashMap<>();

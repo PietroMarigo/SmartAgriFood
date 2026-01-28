@@ -14,8 +14,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email);
 
 INSERT OR IGNORE INTO users (name, surname, username, email, password, role, active) VALUES
-    ('Mario', 'Rossi', 'MR001', 'mario.rossi@warehouse.it', 'pippo123', 'MAGAZZINIERE', 1),
-    ('Francesco', 'Bianchi', 'FB002', 'francesco.bianchi@warehouse.it', 'pippo123', 'UFFICIO', 1),
-    ('Giovanni', 'Verdi', 'GV003', 'giovanni.verdi@warehouse.it', 'pippo123', 'MAGAZZINIERE', 1),
-    ('Laura', 'Neri', 'LN004', 'laura.neri@warehouse.it', 'pippo123', 'UFFICIO', 1);
+    ('Mario', 'Rossi', 'MR001', 'mario.rossi@warehouse.it', '$2a$12$7cX2RitJYygiSi8lf6fqCeb1SZQ2/taDdu5eN1ZF/UdKggZj3DmnW', 'MAGAZZINIERE', 1),
+    ('Francesco', 'Bianchi', 'FB002', 'francesco.bianchi@warehouse.it', '$2a$12$7cX2RitJYygiSi8lf6fqCeb1SZQ2/taDdu5eN1ZF/UdKggZj3DmnW', 'UFFICIO', 1),
+    ('Giovanni', 'Verdi', 'GV003', 'giovanni.verdi@warehouse.it', '$2a$12$7cX2RitJYygiSi8lf6fqCeb1SZQ2/taDdu5eN1ZF/UdKggZj3DmnW', 'MAGAZZINIERE', 1),
+    ('Laura', 'Neri', 'LN004', 'laura.neri@warehouse.it', '$2a$12$7cX2RitJYygiSi8lf6fqCeb1SZQ2/taDdu5eN1ZF/UdKggZj3DmnW', 'UFFICIO', 1);
 

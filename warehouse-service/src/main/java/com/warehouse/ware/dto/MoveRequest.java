@@ -2,15 +2,15 @@ package com.warehouse.ware.dto;
 
 public class MoveRequest {
   private String batchId;
-  private String newLocation;
-  private String workerId;
+  private String newZone;
+  private String workerUsername;
 
-  public String getWorkerId() {
-    return workerId;
+  public String getWorkerUsername() {
+    return workerUsername;
   }
 
-  public void setWorkerId(String workerId) {
-    this.workerId = workerId;
+  public void setWorkerUsername(String workerUsername) {
+    this.workerUsername= workerUsername;
   }
 
   public String getBatchId() {
@@ -21,12 +21,12 @@ public class MoveRequest {
     this.batchId = batchId;
   }
 
-  public String getNewLocation() {
-    return newLocation;
+  public String getNewZone() {
+    return newZone;
   }
 
-  public void setNewLocation(String newLocation) {
-    this.newLocation = newLocation;
+  public void setNewZone(String newZone) {
+    this.newZone= newZone;
   }
 
 }
