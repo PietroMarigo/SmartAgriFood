@@ -1,0 +1,2 @@
+Nel pom.xml la versione di java deve essere 21 non 17
+Inoltre importi due volte alcune dipendenze, per il momento le ho commentate ma sono da togliere
