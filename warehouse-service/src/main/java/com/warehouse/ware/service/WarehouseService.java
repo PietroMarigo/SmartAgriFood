@@ -1,12 +1,13 @@
 package com.warehouse.ware.service;
 
-import com.warehouse.ware.entity.Batch;
+import com.warehouse.common.entity.Batch;
 import com.warehouse.ware.entity.Movment;
-import com.warehouse.ware.entity.Products;
-import com.warehouse.ware.repository.BatchRepository;
+import com.warehouse.common.entity.Products;
+import com.warehouse.common.repository.BatchRepository;
 import com.warehouse.ware.repository.MovementRepository;
 import com.warehouse.ware.repository.ProductRepository;
-import com.warehouse.ware.exception.*;
+// import com.warehouse.ware.exception.*;
+import com.warehouse.common.exception.*;
 import com.warehouse.ware.dto.*;
 
 import java.time.LocalDate;
@@ -49,8 +50,9 @@ public class WarehouseService {
         .orElseThrow(() -> new ProductNotFoundException("Il condice SKU non ha restituito nessun prodotto" + sku));
     LocalDate expirationDate = LocalDate.now().plusDays(product.getShelfLifeDays());
 
-    Batch newBatch = new Batch(batchRequest.getBatchId(), batchRequest.getWeight(), batchRequest.getLocationCode(),
-        expirationDate, "Disponibile", LocalDateTime.now());
+    Batch newBatch = new Batch(batchRequest.getBatchId(), product.getName(), batchRequest.getWeight(),
+        batchRequest.getLocationCode(),
+        expirationDate, "AVAILABLE", LocalDateTime.now());
     Batch savedBatch = batchRepository.save(newBatch);
     return new BatchReceiptResponse().receiptResponse(savedBatch);
   }
