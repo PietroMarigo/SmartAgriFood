@@ -2,7 +2,7 @@ package com.warehouse.ware.dto;
 
 import java.time.LocalDate;
 
-import com.warehouse.ware.entity.Batch;
+import com.warehouse.common.entity.Batch;
 
 public class BatchReceiptResponse {
   private String batchId;

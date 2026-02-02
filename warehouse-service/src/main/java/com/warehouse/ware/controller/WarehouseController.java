@@ -1,8 +1,8 @@
 package com.warehouse.ware.controller;
 
 import com.warehouse.ware.service.WarehouseService;
-import com.warehouse.ware.repository.*;
-import com.warehouse.ware.entity.*;
+// import com.warehouse.ware.repository.*;
+// import com.warehouse.ware.entity.*;
 import com.warehouse.ware.dto.*;
 
 import java.util.HashMap;

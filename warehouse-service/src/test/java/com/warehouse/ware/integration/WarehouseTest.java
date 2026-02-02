@@ -1,10 +1,10 @@
 package com.warehouse.ware.integration;
 
 import com.warehouse.ware.WarehouseServiceApplication;
-import com.warehouse.ware.entity.Batch;
-import com.warehouse.ware.entity.Movment;
+// import com.warehouse.ware.entity.Batch;
+// import com.warehouse.ware.entity.Movment;
 // import com.warehouse.ware.entity.Products;
-import com.warehouse.ware.exception.ProductNotFoundException;
+import com.warehouse.common.exception.ProductNotFoundException;
 import com.warehouse.ware.service.WarehouseService;
 import com.warehouse.ware.dto.*;
 

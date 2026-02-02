@@ -1,4 +1,5 @@
 FROM eclipse-temurin:21-jre-alpine
+RUN apk update && apk add --no-cache sqlite
 WORKDIR /app
 COPY target/*.jar app.jar
 EXPOSE 8081

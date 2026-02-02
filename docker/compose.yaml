@@ -5,46 +5,92 @@ services:
         ports:
             - "27017:27017"
         volumes:
-            - mongodb:/data/db
+            - mongodb_data:/data/db
+            # Auto-runs your demo script on the first startup
+            - ./populate_demo.js:/docker-entrypoint-initdb.d/populate_demo.js:ro
         environment:
             MONGODB_INITDB_ROOT_USERNAME: mongodb
             MONGODB_INITDB_ROOT_PASSWORD: pippo123
-
+            MONGODB_INITDB_DATABASE: wms_db
 
     auth-service:
-        build: 
-            context: ../auth-service/
-            dockerfile: Dockerfile
+        image: pietromarigo/auth-service:1.0
+        container_name: auth-service
         ports:
             - "8081:8081"
         volumes:
-            - ../auth-service/auth.db:/app/auth.db
+            - auth_data:/app/db_folder
+            - ./users.sql:/app/users.sql:ro
         environment:
-            - SPRING_DATASOURCE_URL=jdbc:sqlite:/app/auth.db
+            - SPRING_DATASOURCE_URL=jdbc:sqlite:/app/db_folder/auth.db
+        entrypoint: >
+            sh -c "java -jar /app/app.jar & 
+                   sleep 30; 
+                   sqlite3 /app/db_folder/auth.db < /app/users.sql; 
+                   wait"
         depends_on:
             - mongodb
 
-
     warehouse-service:
-        build: ../warehouse-service/
+        image: pietromarigo/warehouse-service:1.0
+        container_name: warehouse-service
         ports:
             - "8082:8082"
         volumes:
-            - ../warehouse-service/products.db:/app/products.db
+            - warehouse_data:/app/db_folder
+            - ./data.sql:/app/data.sql:ro
         environment:
-            - SPRING_DATASOURCE_URL=jdbc:sqlite:/app/products.db
+            - SPRING_DATASOURCE_URL=jdbc:sqlite:/app/db_folder/products.db
+            - SPRING_DATA_MONGODB_URI=mongodb://mongodb:pippo123@mongodb:27017/wms_db?authSource=admin
+        entrypoint: >
+            sh -c "java -jar /app/app.jar & 
+                   sleep 30; 
+                   sqlite3 /app/db_folder/products.db < /app/data.sql; 
+                   wait"
+        depends_on:
+            - mongodb
+
+    order-service:
+        image: pietromarigo/order-service:1.0
+        container_name: order-service
+        ports:
+            - "8083:8083"
+        environment:
             - SPRING_DATA_MONGODB_URI=mongodb://mongodb:pippo123@mongodb:27017/wms_db?authSource=admin
         depends_on:
             - mongodb
 
+    office-service:
+        image: pietromarigo/office-service:1.0
+        container_name: office-service
+        ports:
+            - "8084:8084"
+        environment:
+            - SPRING_DATA_MONGODB_URI=mongodb://mongodb:pippo123@mongodb:27017/wms_db?authSource=admin
+        depends_on:
+            - mongodb
+            - order-service
+
     api-gateway:
-        build: ../api-gateway/
+        image: pietromarigo/api-gateway:1.0
+        container_name: api-gateway
         ports:
             - "8080:8080"
         depends_on:
             - auth-service
             - warehouse-service
+            - order-service
+            - office-service
+
+    frontend:
+        image: pietromarigo/frontend:1.0
+        container_name: frontend
+        ports:
+            - "8085:80"
+        depends_on:
+            - api-gateway
 
 volumes:
-    mongodb:
-        external: true
+    mongodb_data:
+    auth_data:
+    warehouse_data:
