@@ -13,7 +13,8 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 })
 @EntityScan(basePackages = {
     "com.warehouse.common.entity",
-    "com.warehouse.order.entity" }) // Scans for @Document (Order/Batch)
+    "com.warehouse.order.entity",
+    "com.warehouse.common.dto" })
 @EnableMongoRepositories(basePackages = {
     "com.warehouse.order.repository",
     "com.warehouse.common.repository"

@@ -14,4 +14,6 @@ public interface BatchRepository extends MongoRepository<Batch, String> {
   List<Batch> findByProductSkuAndStatusOrderByExpiryDateAsc(
       String productSku,
       String status);
+
+  List<Batch> findByStatus(String status);
 }

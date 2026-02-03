@@ -10,6 +10,7 @@ public class Batch {
   @Id
   private String batchId;
   private String productSku;
+  private String productName;
   private Double weightKg;
   private LocalDate expiryDate;
   private String locationCode;
@@ -18,6 +19,14 @@ public class Batch {
   private String harvestDate;
   private String increment;
   private LocalDateTime timeStamp;
+
+  public String getProductName() {
+    return productName;
+  }
+
+  public void setProductName(String productName) {
+    this.productName = productName;
+  }
 
   public LocalDateTime getTimeStamp() {
     return timeStamp;
@@ -102,7 +111,8 @@ public class Batch {
   public Batch() {
   }
 
-  public Batch(String batchId, double weight, String locationCode, LocalDate expiryDate, String status,
+  public Batch(String batchId, String productName, double weight, String locationCode, LocalDate expiryDate,
+      String status,
       LocalDateTime timeStamp) {
     this.setBatchId(batchId);
     String[] info = extractInfo(batchId);
@@ -111,6 +121,7 @@ public class Batch {
           "Il Batch ID deve seguire il formato: SKU-Fornitore-Data-Incremento (es. A001-003-20250105-001)");
     }
     this.setProductSku(info[0]);
+    this.setProductName(productName);
     this.setWeightKg(weight);
     this.setLocationCode(locationCode);
     this.setExpiryDate(expiryDate);

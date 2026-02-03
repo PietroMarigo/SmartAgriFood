@@ -12,6 +12,7 @@ public class Products {
   @Column(unique = true, nullable = false)
   private String sku;
 
+  @Column(name = "name")
   private String name;
 
   @Column(name = "shelf_life_days")
