@@ -1,40 +1,49 @@
 package com.warehouse.order.service;
 
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.warehouse.order.dto.PickingTask;
+import com.warehouse.common.dto.OrderRequest;
+import com.warehouse.common.dto.OrderResponse;
+import com.warehouse.common.dto.PickingTask;
 import com.warehouse.common.entity.Batch;
 import com.warehouse.common.entity.Order;
 import com.warehouse.common.entity.OrderItem;
+import com.warehouse.common.entity.OrderStatus;
 import com.warehouse.common.repository.BatchRepository;
+import com.warehouse.common.repository.OrderRepository;
 
 @Service
 public class OrderService {
 
   private final BatchRepository batchRepository;
+  private final OrderRepository orderRepository;
 
-  public OrderService(BatchRepository batchRepository) {
+  @Autowired
+  public OrderService(BatchRepository batchRepository, OrderRepository orderRepository) {
     this.batchRepository = batchRepository;
+    this.orderRepository = orderRepository;
   }
 
-  /**
-   * FEFO picking logic
-   */
-  public List<PickingTask> processOrder(Order order) {
+  public OrderResponse processOrder(OrderRequest request) {
 
+    Order order = new Order(request);
     List<PickingTask> pickingList = new ArrayList<>();
 
-    for (OrderItem item : order.getItems()) {
-
+    for (OrderItem item : request.getItems()) {
       double remainingKg = item.getWeightKg();
 
       List<Batch> batches = batchRepository
           .findByProductSkuAndStatusOrderByExpiryDateAsc(
               item.getProductSku(),
               "AVAILABLE");
+
+      Map<String, Double> batchAllocation = new HashMap<>();
 
       for (Batch batch : batches) {
 
@@ -45,6 +54,7 @@ public class OrderService {
         double takenKg = Math.min(remainingKg, availableKg);
 
         if (takenKg > 0) {
+          batchAllocation.put(batch.getBatchId(), takenKg);
           pickingList.add(
               new PickingTask(
                   batch.getProductSku(),
@@ -69,8 +79,11 @@ public class OrderService {
             "Disponibilità insufficiente per prodotto: " +
                 item.getProductSku());
       }
+      order.getItems().put(item.getProductSku(), batchAllocation);
     }
+    order.setStatus(OrderStatus.NOT_PROCESSED);
+    Order savedOrder = orderRepository.save(order);
 
-    return pickingList;
+    return new OrderResponse(savedOrder.getId(), pickingList);
   }
 }

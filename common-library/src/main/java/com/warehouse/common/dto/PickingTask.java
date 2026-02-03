@@ -1,4 +1,4 @@
-package com.warehouse.order.dto;
+package com.warehouse.common.dto;
 
 import java.time.LocalDate;
 
