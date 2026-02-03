@@ -24,6 +24,10 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      - name: Install Common Library
+        if: ${{ matrix.service != 'frontend' }}
+        run: mvn clean install -DskipTests -f common-library/pom.xml
+
       - name: Build JAR with Maven
         if: ${{ matrix.service != 'frontend' }}
         run: mvn clean package -DskipTests -f ${{ matrix.service }}/pom.xml
