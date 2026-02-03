@@ -9,43 +9,43 @@ import org.springframework.context.annotation.Bean;
 @SpringBootApplication
 public class ApiGatewayApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(ApiGatewayApplication.class, args);
-    }
+  public static void main(String[] args) {
+    SpringApplication.run(ApiGatewayApplication.class, args);
+  }
 
-    /* =====================================================
-       ROUTING DEI MICROSERVIZI
-       ===================================================== */
-    @Bean
-    public RouteLocator gatewayRoutes(RouteLocatorBuilder builder) {
+  /*
+   * =====================================================
+   * ROUTING DEI MICROSERVIZI
+   * =====================================================
+   */
+  @Bean
+  public RouteLocator gatewayRoutes(RouteLocatorBuilder builder) {
 
-        return builder.routes()
+    return builder.routes()
 
-            // AUTH SERVICE
-            .route("auth-service", r -> r
-                .path("/auth/**")
-                .uri("http://auth-service:8081")
-            )
+        // AUTH SERVICE
+        .route("auth-service", r -> r
+            .path("/auth/**")
+            .filters(f -> f.stripPrefix(1))
+            .uri("http://auth-service:8081"))
 
-            // WAREHOUSE SERVICE
-            .route("warehouse-service", r -> r
-                .path("/warehouse/**")
-                .uri("http://warehouse-service:8082")
-            )
+        // WAREHOUSE SERVICE
+        .route("warehouse-service", r -> r
+            .path("/warehouse/**")
+            .filters(f -> f.stripPrefix(1))
+            .uri("http://warehouse-service:8082"))
 
-            // ORDER SERVICE
-            .route("order-service", r -> r
-                .path("/orders/**")
-                .uri("http://order-service:8083")
-            )
+        // ORDER SERVICE
+        .route("order-service", r -> r
+            .path("/orders/**")
+            .filters(f -> f.stripPrefix(1))
+            .uri("http://order-service:8083"))
 
-            // OFFICE / ANALYTICS SERVICE
-            .route("office-service", r -> r
-                .path("/office/**")
-                .uri("http://office-service:8084")
-            )
-            .build();
-    }
+        // OFFICE / ANALYTICS SERVICE
+        .route("office-service", r -> r
+            .path("/office/**")
+            .filters(f -> f.stripPrefix(1))
+            .uri("http://office-service:8084"))
+        .build();
+  }
 }
-
-
