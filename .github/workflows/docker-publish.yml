@@ -8,6 +8,7 @@ on:
 jobs:
   build-and-push:
     runs-on: self-hosted
+    environment: Docker
     strategy:
       matrix:
         service: [auth-service, warehouse-service, order-service, office-service, api-gateway, frontend]
