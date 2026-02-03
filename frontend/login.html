@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="it">
+	<head>
+		<meta charset="UTF-8">
+		<title>WMS - Accesso Sistema</title>
+		<link href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.0/dist/slate/bootstrap.min.css" rel="stylesheet">
+		<style>
+			body { height: 100vh; display: flex; align-items: center; justify-content: center; background-color: #1a1a1a; }
+			.login-card { width: 100%; max-width: 400px; border-radius: 15px; border: 1px solid #444; }
+			.btn-primary { background-color: #375a7f; border: none; }
+			.btn-primary:hover { background-color: #2b4764; }
+		</style>
+	</head>
+	<body class="bg-dark text-light">
+
+		<div class="login-card card bg-secondary shadow-lg">
+			<div class="card-header bg-primary text-white text-center py-3">
+				<h4 class="mb-0">📦 Smart Warehouse</h4>
+				<small>Login di Sistema</small>
+			</div>
+			<div class="card-body p-4">
+				<div id="alertBox" class="alert alert-danger d-none" role="alert"></div>
+
+				<form id="loginForm">
+					<div class="mb-3">
+						<label for="username" class="form-label text-white-50">Username</label>
+						<input type="text" class="form-control" id="username" placeholder="es. MR001" required>
+					</div>
+					<div class="mb-4">
+						<label for="password" class="form-label text-white-50">Password</label>
+						<input type="password" class="form-control" id="password" placeholder="••••••••" required>
+					</div>
+					<button type="submit" class="btn btn-primary w-100 py-2 fw-bold">Entra nel Sistema</button>
+				</form>
+			</div>
+			<div class="card-footer text-center py-3 border-top border-secondary">
+				<span class="text-white-50 small">Versione Progetto Esame 2026</span>
+			</div>
+		</div>
+
+		<script>
+			// Configuration - matches your Gateway URL
+			//const GATEWAY_URL = "http://localhost:8080";
+			const GATEWAY_URL = "";
+			
+			document.getElementById('loginForm').addEventListener('submit', async (e) => {
+				e.preventDefault();
+				
+				const username = document.getElementById('username').value;
+				const password = document.getElementById('password').value;
+				const alertBox = document.getElementById('alertBox');
+				
+				try {
+					// Call the Auth Service via Gateway [cite: 191, 193]
+					const resp = await fetch(`${GATEWAY_URL}/auth/api/auth/login`, {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ username, password }) // Matches LoginRequest.java [cite: 361]
+						});
+						
+						if (!resp.ok) {
+							// Extracts error message from AuthController catch blocks [cite: 194, 195]
+							const errorData = await resp.json();
+							throw new Error(errorData.message || "Credenziali non valide");
+						}
+						
+						// Successfully received LoginResponse [cite: 321, 322]
+						const data = await resp.json();
+						
+						// 1. Store session info for the other pages to use
+						localStorage.setItem('currentUser', data.username);
+						localStorage.setItem('userRole', data.role);
+						localStorage.setItem('userName', `${data.name} ${data.surname}`);
+						
+						// 2. Redirection logic based on UserRole enum [cite: 309, 334]
+						if (data.role === 'UFFICIO') {
+							window.location.href = 'office.html';
+							} else if (data.role === 'MAGAZZINIERE') {
+								window.location.href = 'warehouse.html';
+								} else {
+									throw new Error("Ruolo utente non riconosciuto dal sistema.");
+								}
+								
+								} catch (err) {
+									alertBox.innerText = err.message;
+									alertBox.classList.remove('d-none');
+								}
+								});
+		</script>
+	</body>
+</html>
