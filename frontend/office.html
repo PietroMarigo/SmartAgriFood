@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="it">
+	<head>
+		<meta charset="UTF-8">
+		<title>WMS - Area Ufficio</title>
+		<link href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.0/dist/slate/bootstrap.min.css" rel="stylesheet">
+		<style>
+			.critical-row { background-color: #721c24 !important; color: #f8d7da !important; }
+			.dashboard-container { height: 400px; overflow-y: auto; border: 1px solid #444; border-radius: 8px; }
+			.navbar { margin-bottom: 20px; border-bottom: 2px solid #375a7f; }
+		</style>
+	</head>
+	<body class="bg-dark text-light">
+
+		<nav class="navbar navbar-expand-lg navbar-dark bg-secondary">
+			<div class="container-fluid">
+				<span class="navbar-brand">📦 Smart Warehouse | <small class="text-info">Ufficio</small></span>
+				<div class="d-flex align-items-center">
+					<span id="welcomeUser" class="me-3 text-white-50"></span>
+					<button class="btn btn-outline-danger btn-sm" onclick="logout()">Logout</button>
+				</div>
+			</div>
+		</nav>
+
+		<div class="container-fluid px-4">
+			<div class="row">
+				<div class="col-md-7">
+					<div class="card bg-secondary mb-4 shadow">
+						<div class="card-header bg-primary text-white d-flex justify-content-between">
+							<h5 class="mb-0">Monitoraggio Scorte (Live)</h5>
+							<span class="badge bg-info">Aggiornamento: 5s</span>
+						</div>
+						<div class="card-body p-0">
+							<div class="dashboard-container">
+								<table class="table table-hover table-dark mb-0">
+									<thead class="sticky-top bg-secondary">
+										<tr>
+											<th>Prodotto</th>
+											<th>Batch ID</th>
+											<th>Peso (kg)</th>
+											<th>Scadenza (Giorni)</th>
+											<th>Stato</th>
+										</tr>
+									</thead>
+									<tbody id="dashboardBody">
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="col-md-5">
+					<div class="card bg-secondary shadow">
+						<div class="card-header bg-success text-white">
+							<h5 class="mb-0">Crea Nuovo Ordine</h5>
+						</div>
+						<div class="card-body">
+							<div id="orderAlert" class="alert d-none"></div>
+
+							<div class="mb-3">
+								<label class="form-label">Cliente</label>
+								<input type="text" id="customer" class="form-control" placeholder="es. Supermercato Rossi">
+							</div>
+							<div class="mb-3">
+								<label class="form-label">Data Ritiro</label>
+								<input type="date" id="pickupDate" class="form-control">
+							</div>
+
+							<hr class="my-4">
+							<h6>Prodotti in Lista</h6>
+							<div id="itemList" class="mb-3">
+								<div class="row g-2 mb-2 item-row">
+									<div class="col-7">
+										<input type="text" class="form-control product-sku" placeholder="SKU Prodotto">
+									</div>
+									<div class="col-5">
+										<input type="number" class="form-control product-kg" placeholder="Kg">
+									</div>
+								</div>
+							</div>
+
+							<button type="button" class="btn btn-outline-info btn-sm mb-3" onclick="addItemRow()">+ Aggiungi Prodotto</button>
+							<button type="button" class="btn btn-primary w-100 py-2 fw-bold" onclick="submitOrder()">Invia Ordine a Magazzino</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<script>
+			//const GATEWAY_URL = "http://localhost:8080";
+			const GATEWAY_URL = "";
+			
+			// 1. Session Setup
+			window.onload = () => {
+				const user = localStorage.getItem('currentUser');
+				const name = localStorage.getItem('userName');
+				if(!user) window.location.href = 'login.html';
+				
+				document.getElementById('welcomeUser').innerText = `Operatore: ${name} (${user})`;
+				fetchDashboard(); // Initial load
+				};
+				
+				function logout() {
+					localStorage.clear();
+					window.location.href = 'login.html';
+				}
+				
+				// 2. Polling Logic for Dashboard
+				async function fetchDashboard() {
+					try {
+						const resp = await fetch(`${GATEWAY_URL}/office/api/office/dashboard`);
+						if(!resp.ok) return;
+						
+						const batches = await resp.json();
+						const tbody = document.getElementById('dashboardBody');
+						tbody.innerHTML = '';
+						
+						batches.forEach(b => {
+							const rowClass = b.isCritical ? 'critical-row' : '';
+							tbody.innerHTML += `
+							<tr class="${rowClass}">
+							<td>${b.productName}</td>
+							<td><small>${b.batchId}</small></td>
+							<td><strong>${b.weightKg}</strong></td>
+							<td>${b.daysToExpire}</td>
+							<td><span class="badge ${b.isCritical ? 'bg-warning' : 'bg-success'}">${b.status}</span></td>
+							</tr>
+							`;
+							});
+							} catch (e) { console.error("Polling error:", e); }
+						}
+						
+						setInterval(fetchDashboard, 5000); // Poll every 5 seconds
+						
+						// 3. Order Management Logic [cite: 142-143, 144]
+						function addItemRow() {
+							const container = document.getElementById('itemList');
+							const row = document.createElement('div');
+							row.className = 'row g-2 mb-2 item-row';
+							row.innerHTML = `
+							<div class="col-7"><input type="text" class="form-control product-sku" placeholder="SKU Prodotto"></div>
+							<div class="col-5"><input type="number" class="form-control product-kg" placeholder="Kg"></div>
+							`;
+							container.appendChild(row);
+						}
+						
+						async function submitOrder() {
+							const alert = document.getElementById('orderAlert');
+							const items = [];
+							
+							// Build the item list from UI rows
+							document.querySelectorAll('.item-row').forEach(row => {
+								const sku = row.querySelector('.product-sku').value;
+								const kg = row.querySelector('.product-kg').value;
+								if(sku && kg) items.push({ productSku: sku, weightKg: parseFloat(kg) });
+								});
+								
+								const orderData = {
+									customer: document.getElementById('customer').value,
+									pickupDate: document.getElementById('pickupDate').value,
+									items: items // Matches the shared OrderRequest DTO
+									};
+									
+									try {
+										const resp = await fetch(`${GATEWAY_URL}/office/api/office/submit-order`, {
+											method: 'POST',
+											headers: { 'Content-Type': 'application/json' },
+											body: JSON.stringify(orderData)
+											});
+											
+											const result = await resp.text();
+											
+											if(resp.ok) {
+												alert.className = "alert alert-success";
+												alert.innerText = "Ordine Creato e Scorte Prenotate!";
+												alert.classList.remove('d-none');
+												fetchDashboard(); // Immediate refresh to see reserved stock change
+												} else {
+													throw new Error(result); // Shows "Insufficient Stock"
+												}
+												} catch (e) {
+													alert.className = "alert alert-danger";
+													alert.innerText = "Errore: " + e.message;
+													alert.classList.remove('d-none');
+												}
+											}
+		</script>
+	</body>
+</html>

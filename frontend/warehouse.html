@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="it">
+	<head>
+		<meta charset="UTF-8">
+		<title>WMS - Area Magazzino</title>
+		<link href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.0/dist/slate/bootstrap.min.css" rel="stylesheet">
+		<style>
+			.order-card { border-left: 5px solid #375a7f; transition: 0.3s; }
+			.order-card:hover { transform: scale(1.02); }
+			.status-badge { font-size: 0.8rem; }
+			.nav-tabs .nav-link.active { background-color: #375a7f; border-color: #375a7f; }
+		</style>
+	</head>
+	<body class="bg-dark text-light">
+
+		<nav class="navbar navbar-expand-lg navbar-dark bg-secondary shadow-sm mb-4">
+			<div class="container-fluid">
+				<span class="navbar-brand">📦 Smart Warehouse | <small class="text-info">Magazzino</small></span>
+				<div class="d-flex align-items-center">
+					<span id="welcomeUser" class="me-3 text-white-50"></span>
+					<button class="btn btn-outline-danger btn-sm" onclick="logout()">Logout</button>
+				</div>
+			</div>
+		</nav>
+
+		<div class="container-fluid px-4">
+			<ul class="nav nav-tabs mb-4" id="warehouseTabs" role="tablist">
+				<li class="nav-item">
+					<button class="nav-link active" id="picking-tab" data-bs-toggle="tab" data-bs-target="#picking" type="button">Gestione Ordini (Picking)</button>
+				</li>
+				<li class="nav-item">
+					<button class="nav-link" id="receiving-tab" data-bs-toggle="tab" data-bs-target="#receiving" type="button">Ricezione Merce</button>
+				</li>
+			</ul>
+
+			<div class="tab-content" id="warehouseTabContent">
+
+				<div class="tab-pane fade show active" id="picking" role="tabpanel">
+					<div class="row">
+						<div class="col-md-12">
+							<div class="d-flex justify-content-between align-items-center mb-3">
+								<h4>Ordini da Elaborare</h4>
+								<button class="btn btn-sm btn-outline-info" onclick="fetchOrders()">🔄 Aggiorna Lista</button>
+							</div>
+							<div id="ordersContainer" class="row">
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="tab-pane fade" id="receiving" role="tabpanel">
+					<div class="row justify-content-center">
+						<div class="col-md-6">
+							<div class="card bg-secondary shadow">
+								<div class="card-header bg-success text-white">Nuovo Carico (Scanner)</div>
+								<div class="card-body">
+									<form id="receiveForm">
+										<div class="mb-3">
+											<label class="form-label">Batch ID (Scan)</label>
+											<input type="text" id="batchId" class="form-control" placeholder="A001-003-20260130-001" required>
+										</div>
+										<div class="mb-3">
+											<label class="form-label">Peso (Kg)</label>
+											<input type="number" step="0.01" id="weight" class="form-control" required>
+										</div>
+										<div class="mb-3">
+											<label class="form-label">Posizione Scaffale</label>
+											<input type="text" id="location" class="form-control" placeholder="A-01-01" required>
+										</div>
+										<button type="submit" class="btn btn-success w-100 py-2">Registra Batch</button>
+									</form>
+									<div id="receiveResult" class="mt-3 alert d-none"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="processModal" tabindex="-1">
+			<div class="modal-dialog modal-lg">
+				<div class="modal-content bg-secondary text-light">
+					<div class="modal-header border-secondary">
+						<h5 class="modal-title">Dettaglio Picking: <span id="modalOrderId"></span></h5>
+						<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+					</div>
+					<div class="modal-body">
+						<div id="modalItems"></div>
+						<hr class="border-secondary">
+						<div class="mb-3">
+							<label class="form-label">Zona di Carico Finale (Loading Zone)</label>
+							<input type="text" id="loadingZoneInput" class="form-control" placeholder="es. ZONA-B">
+						</div>
+					</div>
+					<div class="modal-footer border-secondary">
+						<button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Annulla</button>
+						<button type="button" class="btn btn-primary" onclick="completeOrder()">Conferma Carico Completato</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+		<script>
+			const GATEWAY_URL = ""; // Percorso relativo per Nginx proxy
+			const currentWorker = localStorage.getItem('currentUser');
+			let activeOrderId = null;
+			
+			window.onload = () => {
+				if(!currentWorker) window.location.href = 'login.html';
+				document.getElementById('welcomeUser').innerText = `Loggato come: ${currentWorker}`;
+				fetchOrders();
+				};
+				
+				function logout() {
+					localStorage.clear();
+					window.location.href = 'login.html';
+				}
+				
+				// --- UTILITY: Gestione errori JSON/HTML ---
+				async function safeJson(response) {
+					const contentType = response.headers.get("content-type");
+					if (contentType && contentType.includes("application/json")) {
+						return await response.json();
+					}
+					throw new TypeError("Oops, la risposta non è un JSON! Controlla le rotte del Gateway.");
+				}
+				
+				// --- LOGICA RICEZIONE ---
+				document.getElementById('receiveForm').onsubmit = async (e) => {
+					e.preventDefault();
+					const resultDiv = document.getElementById('receiveResult');
+					const data = {
+						batchId: document.getElementById('batchId').value,
+						weight: parseFloat(document.getElementById('weight').value),
+						locationCode: document.getElementById('location').value
+						};
+						
+						try {
+							const resp = await fetch(`${GATEWAY_URL}/warehouse/api/warehouse/receive`, {
+								method: 'POST',
+								headers: {'Content-Type': 'application/json'},
+								body: JSON.stringify(data)
+								});
+								if(!resp.ok) throw new Error("Errore durante la registrazione");
+								resultDiv.className = "alert alert-success mt-3";
+								resultDiv.innerText = "Batch registrato con successo!";
+								resultDiv.classList.remove('d-none');
+								e.target.reset();
+								} catch(err) {
+									resultDiv.className = "alert alert-danger mt-3";
+									resultDiv.innerText = err.message;
+									resultDiv.classList.remove('d-none');
+								}
+								};
+								
+								// --- LOGICA PICKING (Con rotte PLURALI /orders/) ---
+								async function fetchOrders() {
+									try {
+										const resp = await fetch(`${GATEWAY_URL}/orders/api/orders/pending`); // Fix: added 's'
+										const orders = await safeJson(resp);
+										const container = document.getElementById('ordersContainer');
+										container.innerHTML = '';
+										
+										if (orders.length === 0) {
+											container.innerHTML = '<div class="col-12 text-center text-muted"><p>Nessun ordine in attesa di picking.</p></div>';
+											return;
+										}
+										
+										orders.forEach(order => {
+											container.innerHTML += `
+											<div class="col-md-4 mb-3">
+											<div class="card bg-secondary order-card h-100 shadow-sm">
+											<div class="card-body">
+											<div class="d-flex justify-content-between align-items-start mb-2">
+											<h6 class="card-title mb-0">📦 Ordine: ${order.id.substring(0,8)}</h6>
+											<span class="badge bg-warning text-dark status-badge">${order.status}</span>
+											</div>
+											<p class="small text-white-50 mb-3">
+											Cliente: ${order.customer}<br>
+											Data Ritiro: ${order.pickupDate}
+											</p>
+											<button class="btn btn-primary btn-sm w-100" onclick="startPicking('${order.id}')">Inizia Prelievo</button>
+											</div>
+											</div>
+											</div>
+											`;
+											});
+											} catch(e) {
+												console.error("Error fetching orders:", e);
+												document.getElementById('ordersContainer').innerHTML = `<div class="alert alert-danger w-100">${e.message}</div>`;
+											}
+										}
+										
+										async function startPicking(id) {
+											activeOrderId = id;
+											try {
+												// 1. Mark as In Process
+												await fetch(`${GATEWAY_URL}/orders/api/orders/${id}/start?worker=${currentWorker}`, { method: 'PUT' });
+												
+												// 2. Fetch fresh data
+												const resp = await fetch(`${GATEWAY_URL}/orders/api/orders/${id}`);
+												const order = await safeJson(resp);
+												
+												console.log("Order Data Received:", order); // DEBUG: Check this in F12 console
+												
+												document.getElementById('modalOrderId').innerText = id;
+												const itemsDiv = document.getElementById('modalItems');
+												
+												// Check if items exists and is an object
+												if (!order.items || typeof order.items !== 'object') {
+													itemsDiv.innerHTML = '<div class="alert alert-warning">Errore: Dati articoli non trovati o formato non valido.</div>';
+													} else {
+														let html = '<h6>Lista Prelievo (FEFO):</h6><ul class="list-group list-group-flush">';
+														
+														// Iterate safely
+														const skus = Object.keys(order.items);
+														if (skus.length === 0) {
+															html += '<li class="list-group-item">Nessun articolo presente.</li>';
+															} else {
+																skus.forEach(sku => {
+																	const allocations = order.items[sku];
+																	Object.entries(allocations).forEach(([batchId, kg]) => {
+																		html += `
+																		<li class="list-group-item bg-transparent text-light border-secondary d-flex justify-content-between">
+																		<span>🛒 ${sku} <b>(Lotto: ${batchId})</b></span>
+																		<span class="badge bg-info">${kg} Kg</span>
+																		</li>`;
+																		});
+																		});
+																	}
+																	html += '</ul>';
+																	itemsDiv.innerHTML = html;
+																}
+																
+																new bootstrap.Modal(document.getElementById('processModal')).show();
+																} catch(e) {
+																	console.error("Detailed Error:", e);
+																	alert("Errore nell'avvio dell'ordine: " + e.message);
+																}
+															}
+															
+															async function completeOrder() {
+																const loadingZone = document.getElementById('loadingZoneInput').value;
+																if(!loadingZone) return alert("Inserire la zona di carico!");
+																
+																try {
+																	const resp = await fetch(`${GATEWAY_URL}/orders/api/orders/${activeOrderId}/complete`, { // Fix: added 's'
+																	method: 'PUT',
+																	headers: {'Content-Type': 'application/json'},
+																	body: JSON.stringify({ loadingZone: loadingZone })
+																	});
+																	
+																	if(resp.ok) {
+																		bootstrap.Modal.getInstance(document.getElementById('processModal')).hide();
+																		fetchOrders();
+																		} else {
+																			throw new Error("Impossibile completare l'ordine.");
+																		}
+																		} catch(e) { alert("Errore nel completamento: " + e.message); }
+																	}
+		</script>
+	</body>
+</html>
