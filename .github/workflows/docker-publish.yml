@@ -5,8 +5,55 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
 
+env:
+  DOCKER_HOST: unix:///run/user/1000/docker.sock
+
 jobs:
+  lint:
+    runs-on: self-hosted
+    strategy:
+      matrix:
+        service: [auth-service, warehouse-service, order-service, office-service, api-gateway, frontend]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # --- Backend (Java) Configuration ---
+      - name: Set up JDK 21
+        if: ${{ matrix.service != 'frontend' }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Install Common Library (for dependencies)
+        if: ${{ matrix.service != 'frontend' }}
+        run: mvn clean install -DskipTests -f common-library/pom.xml
+
+      - name: Lint Java Services
+        if: ${{ matrix.service != 'frontend' }}
+        # Adjust the goal based on your specific linter (e.g., checkstyle:check, spotless:check)
+        run: mvn checkstyle:check -f ${{ matrix.service }}/pom.xml
+
+      # --- Frontend (Plain HTML/JS) Configuration ---
+      - name: Set up Node.js (Required for npx)
+        if: ${{ matrix.service == 'frontend' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Lint HTML and JavaScript
+        if: ${{ matrix.service == 'frontend' }}
+        working-directory: ./frontend
+        # Uses npx to run linters without needing a package.json
+        run: |
+          npx htmlhint "**/*.html"
+          npx jshint "**/*.js"
+
   build-and-push:
+    needs: lint
     runs-on: self-hosted
     environment: Docker
     strategy:
@@ -47,5 +94,3 @@ jobs:
           tags: |
             pietromarigo/${{ matrix.service }}:latest
             pietromarigo/${{ matrix.service }}:1
-env:
-    DOCKER_HOST: unix:///run/user/1000/docker.sock
